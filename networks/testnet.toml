@@ -5,6 +5,10 @@
 # the signature-verified auto-update.
 
 chain = "testnet"
+# Pinned chain identity — the published genesis hash (networks/testnet/genesis.hash).
+# The visor halts a node whose reported genesis_hash differs (booted on the wrong
+# chain). Verify with: mtf-node genesis-hash --genesis networks/testnet/genesis.json
+genesis_hash = "6a4e17cf65ef0387c7fc918e633fabac4573605043f979ef1b0ef4c7c7ec3d4d"
 
 [node]
 config = "/etc/mtf/node.toml"   # EDIT: your node config (see examples/node.toml)
