@@ -35,14 +35,24 @@ systemd / docker  →  mtf-visor  →  mtf-node
 
 ## Networks
 
-| Network | chain_id | Visor config |
-|---|---|---|
-| Testnet | 114514 | [`networks/testnet.toml`](networks/testnet.toml) |
-| Mainnet | 8964 | [`networks/mainnet.toml`](networks/mainnet.toml) |
+| Network | chain_id | Visor config | Genesis |
+|---|---|---|---|
+| Testnet | 114514 | [`networks/testnet.toml`](networks/testnet.toml) | [`networks/testnet/genesis.json`](networks/testnet/genesis.json) |
+| Mainnet | 8964 | [`networks/mainnet.toml`](networks/mainnet.toml) | _(published at launch)_ |
 
-Each file is a ready-to-edit `mtf-visor` config pinning that network's
-release-signing keys, manifest URL, and chain binding. Fields you must set are
-marked `# EDIT`.
+The visor config pins that network's release-signing keys, manifest URL, and
+chain binding (fields you must set are marked `# EDIT`).
+
+The **genesis** is the chain's creation artifact — chain_id, genesis time, and the
+full validator set (address, pubkey, stake). The node binds its genesis block to
+the genesis hash, so every node that boots from the same `genesis.json` agrees on
+one chain identity. Point your node config's `genesis_file` at it, and verify the
+published hash:
+
+```sh
+mtf-node genesis-hash --genesis networks/testnet/genesis.json
+# must print the contents of networks/testnet/genesis.hash
+```
 
 ## Install
 

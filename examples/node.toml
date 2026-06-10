@@ -19,13 +19,18 @@ peers = []
 
 [consensus]
 target_block_interval_ms = 1000
-chain_id = 114514                        # NETWORK: 114514 testnet / 8964 mainnet
-chain_start_ms = 0                       # NETWORK
+chain_id = 114514                        # NETWORK: must equal genesis.json chain_id (testnet 114514 / mainnet 8964)
+chain_start_ms = 1784073600000           # NETWORK: must equal genesis.json genesis_time_ms
 startup_grace_secs = 15
-# NETWORK: the genesis validator set (id + stake [+ pubkey]), published at launch.
-# Every node must carry an identical list or they disagree on quorum.
+# Explicit genesis — the published chain-creation artifact for your network
+# (networks/<net>/genesis.json). The node binds its genesis block to this file's
+# genesis_hash and derives the epoch length + active-set cap from it. Copy the
+# network's genesis.json locally and point here.
+genesis_file = "/etc/mtf/genesis.json"   # EDIT: local path to the network's genesis.json
+# NETWORK: the genesis validator set — must AGREE with genesis.json (cross-checked
+# at boot, fail-closed). id + stake + pubkey_hex are taken from genesis.json.
 validators = [
-  # { id = 0, stake = 100, pubkey_hex = "<33-byte hex>" },
+  # { id = 1, stake = 100, pubkey_hex = "<33-byte hex from genesis.json>" },
 ]
 
 [observability]
