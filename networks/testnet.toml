@@ -34,8 +34,8 @@ passthrough = true
 # cannot be redirected.
 [update]
 manifest_url = "https://binaries.mtf.exchange/testnet/node/manifest.json"
-# EDIT at launch: the published testnet release-signing public key(s).
-release_pubkeys = ["<testnet-release-pubkey>"]
+# Testnet release-signing public key (pairs with the CI RELEASE_SIGNING_KEY).
+release_pubkeys = ["03d444dca3e2ae9229dd91207e34351ce60c6eb0d5db9ace84d575440ea1c9cc64"]
 release_threshold = 1
 poll_secs = 30
 request_timeout_secs = 30
