@@ -1,0 +1,52 @@
+# mtf-visor config — MetaFlux TESTNET (chain_id 114514).
+#
+# Copy to /etc/mtf/visor.toml and edit the `# EDIT` fields. The visor passes
+# [node].config verbatim to `mtf-node`; everything else governs supervision and
+# the signature-verified auto-update.
+
+chain = "testnet"
+
+[node]
+config = "/etc/mtf/node.toml"   # EDIT: your node config (see examples/node.toml)
+extra_args = []
+
+[paths]
+home = "/var/lib/mtf-visor"      # staged binaries, journal, rotated logs, current symlink
+
+[supervisor]
+stable_secs = 60
+backoff_initial_ms = 500
+backoff_max_secs = 30
+backoff_multiplier = 2
+shutdown_grace_secs = 10
+post_swap_health_secs = 120
+
+[log]
+max_mb = 256
+keep = 10
+total_mb = 4096
+min_free_mb = 2048
+passthrough = true
+
+# Signature-verified auto-update. The visor polls this manifest, verifies the
+# threshold signature against release_pubkeys, checks the chain binding, and
+# stages the matching binary. The binary URL is signed inside the manifest, so it
+# cannot be redirected.
+[update]
+manifest_url = "https://binaries.mtf.exchange/testnet/node/manifest.json"
+# EDIT at launch: the published testnet release-signing public key(s).
+release_pubkeys = ["<testnet-release-pubkey>"]
+release_threshold = 1
+poll_secs = 30
+request_timeout_secs = 30
+allowed_hosts = ["binaries.mtf.exchange"]
+
+# Swap-at-height. Safe to enable: the visor only swaps when the node halts at the
+# governance-set freeze and a verified matching binary is staged.
+[upgrade]
+enabled = true
+info_url = "http://127.0.0.1:8080"
+poll_secs = 2
+
+[observability]
+metrics_listen = "127.0.0.1:9110"

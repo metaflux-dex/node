@@ -1,0 +1,41 @@
+# mtf-node config template — the file the visor passes as `mtf-node --config`.
+#
+# Copy to /etc/mtf/node.toml and edit the `# EDIT` fields. Values marked
+# `# NETWORK` are fixed per network and published with the launch parameters —
+# all nodes on a network must share them identically.
+
+[node]
+id = 0                                   # EDIT: your validator id (0-indexed)
+data_dir = "/var/lib/mtf-node"           # WAL + snapshots; back this up
+# Your validator signing key. Prefer an env var or a file over inlining it.
+# validator_key_hex = "<32-byte hex>"    # EDIT (validators only)
+
+[network]
+# EDIT: the addresses peers dial you on. The gossip/peer_rpc/auth ports must be
+# publicly reachable.
+listen = { gossip = "0.0.0.0:4001", peer_rpc = "0.0.0.0:4002", auth = "0.0.0.0:4003" }
+# NETWORK: the genesis seed peers (id + host:port), published at launch.
+peers = []
+
+[consensus]
+target_block_interval_ms = 1000
+chain_id = 114514                        # NETWORK: 114514 testnet / 8964 mainnet
+chain_start_ms = 0                       # NETWORK
+startup_grace_secs = 15
+# NETWORK: the genesis validator set (id + stake [+ pubkey]), published at launch.
+# Every node must carry an identical list or they disagree on quorum.
+validators = [
+  # { id = 0, stake = 100, pubkey_hex = "<33-byte hex>" },
+]
+
+[observability]
+api_listen = "0.0.0.0:8080"              # REST + WebSocket
+metrics_listen = "127.0.0.1:9100"
+evm_rpc_listen = "0.0.0.0:8545"          # Ethereum JSON-RPC edge
+
+[persistence]
+enabled = true
+
+# Advanced, optional subsystems (off-chain price feed, multi-chain bridge
+# operation) are configured separately per the operator handbook and are omitted
+# from this minimal template.
