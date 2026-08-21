@@ -8,7 +8,7 @@ chain = "testnet"
 # Pinned chain identity — the published genesis hash (networks/testnet/genesis.hash).
 # The visor halts a node whose reported genesis_hash differs (booted on the wrong
 # chain). Verify with: mtf-node genesis-hash --genesis networks/testnet/genesis.json
-genesis_hash = "6a4e17cf65ef0387c7fc918e633fabac4573605043f979ef1b0ef4c7c7ec3d4d"
+genesis_hash = "db1237bb365202c4b34bc60bff7511e605ef0f25fff149f5ceb84cc439f57314"
 
 [node]
 config = "/etc/mtf/node.toml"   # EDIT: your node config (see examples/node.toml)
@@ -35,18 +35,27 @@ passthrough = true
 # Signature-verified auto-update. The visor polls this manifest, verifies the
 # threshold signature against release_pubkeys, checks the chain binding, and
 # stages the matching binary. The binary URL is signed inside the manifest, so it
-# cannot be redirected.
+# cannot be redirected. See docs/VERIFYING.md for both verification layers.
 [update]
 manifest_url = "https://binaries.mtf.exchange/testnet/node/manifest.json"
-# Testnet release-signing public key (pairs with the CI RELEASE_SIGNING_KEY).
+# Testnet release-signing public key (secp256k1). Layer 1 of two.
 release_pubkeys = ["0378fb0791fa8e8634601fb6a2969dcb0c251624acc09304c8f56b18eef64456a2"]
 release_threshold = 1
+# Layer 2: the offline GPG root key. The visor imports this file into an isolated
+# keyring, then checks each staged binary's detached .asc signature against it.
+# The visor REFUSES to start an [update] section without this field, on every
+# network. Fetch the file first — see docs/VERIFYING.md.
+# Fingerprint: 5AF6597573B2E475B0C646BAD8E6D0B3D187F583
+release_gpg_pubkey = "/etc/mtf/pub_key.asc"
 poll_secs = 30
 request_timeout_secs = 30
 allowed_hosts = ["binaries.mtf.exchange"]
 
 # Swap-at-height. Safe to enable: the visor only swaps when the node halts at the
 # governance-set freeze and a verified matching binary is staged.
+# The visor reads the node's upgrade state over the node's own API. Set info_url
+# to the api_listen address in YOUR node.toml. It is a local call, not a public
+# endpoint.
 [upgrade]
 enabled = true
 info_url = "http://127.0.0.1:8080"

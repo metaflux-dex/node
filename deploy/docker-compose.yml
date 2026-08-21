@@ -4,10 +4,15 @@
 # Place visor.toml + node.toml next to this file (copied from networks/ and
 # examples/), then: docker compose up -d
 #
-# NOTE: docker's restart policy cannot distinguish the visor's intentional
-# exit 78 (halt) from a crash, so it will restart on a halt. For a production
-# validator prefer the systemd unit (deploy/mtf-visor.service), which honors
-# exit 78 via RestartPreventExitStatus.
+# Exit codes, in the order they happen: the node exits 77 at a freeze height,
+# and the visor normally swaps the binary and restarts it. When the visor cannot
+# complete the swap safely it stops and exits 78 — an intentional halt that needs
+# an operator.
+#
+# NOTE: docker's restart policy cannot tell exit 78 apart from a crash, so it
+# restarts the container on an intentional halt. For a production validator
+# prefer the systemd unit (deploy/mtf-visor.service), which honors exit 78 via
+# RestartPreventExitStatus.
 
 services:
   mtf-visor:
@@ -23,11 +28,19 @@ services:
       - "4001:4001"   # gossip   (public)
       - "4002:4002"   # peer rpc (public)
       - "4003:4003"   # auth     (public)
-      - "8080:8080"   # REST + WebSocket
+      - "8080:8080"   # REST + WebSocket (your listen port; change to taste)
       - "8545:8545"   # EVM JSON-RPC
+    # A single-file bind mount pins an INODE. Editing the file on the host with an
+    # editor that writes a new file leaves the container reading the old one, with
+    # no error. After any edit, recreate the container, or mount a directory.
     volumes:
-      - ./visor.toml:/etc/mtf/visor.toml:ro
-      - ./node.toml:/etc/mtf/node.toml:ro
+      # Read from /etc/mtf on the host — the same location the install steps in
+      # the README copy into, so both lanes use one place.
+      - /etc/mtf/visor.toml:/etc/mtf/visor.toml:ro
+      - /etc/mtf/node.toml:/etc/mtf/node.toml:ro
+      # node.toml's genesis_file points here. Without this mount the node exits
+      # at boot because it cannot read the genesis it is pinned to.
+      - /etc/mtf/genesis.json:/etc/mtf/genesis.json:ro
       - mtf-visor-home:/var/lib/mtf-visor
       - mtf-node-data:/var/lib/mtf-node
 

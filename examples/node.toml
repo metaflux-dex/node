@@ -1,46 +1,119 @@
-# mtf-node config template — the file the visor passes as `mtf-node --config`.
+# Node config template — the file the visor passes as `mtf-node --config`.
+# The binary this configures is named `mtf-node` on disk.
 #
 # Copy to /etc/mtf/node.toml and edit the `# EDIT` fields. Values marked
-# `# NETWORK` are fixed per network and published with the launch parameters —
-# all nodes on a network must share them identically.
+# `# NETWORK` are fixed per network. All nodes on a network must share them
+# identically.
 
 [node]
-id = 0                                   # EDIT: your validator id (0-indexed)
+id = 0                                   # EDIT: your node id
 data_dir = "/var/lib/mtf-node"           # WAL + snapshots; back this up
-# Your validator signing key. Prefer an env var or a file over inlining it.
-# validator_key_hex = "<32-byte hex>"    # EDIT (validators only)
+
+# Your node signing key (32-byte hex). Prefer an env var or a file over an
+# inline value.
+#
+# REQUIRED on testnet and mainnet. Without it the node fails to boot. This
+# applies to EVERY node, including a read-only observer: the same key
+# authenticates your node on the peer-auth port.
+# Set `allow_devnet_keys = true` ONLY for local solo development. It selects a
+# publicly derivable key, so it is never safe on a shared network.
+# validator_key_hex = "<32-byte hex>"    # EDIT
+# allow_devnet_keys = false
+
+# Governance-vote admin socket. The `mtf-node gov` CLI connects here. There is
+# no TCP transport. The socket is created 0600, and those permissions are the
+# gate.
+# Unset defaults to `<data_dir>/gov-admin.sock`.
+# gov_admin_socket = "/var/lib/mtf-node/gov-admin.sock"
+# Optional shared secret, checked in addition to the socket permissions. When
+# you set it, the gov CLI needs the same token.
+# gov_admin_token = "<secret>"
 
 [network]
-# EDIT: the addresses peers dial you on. The gossip/peer_rpc/auth ports must be
-# publicly reachable.
+# EDIT: the addresses peers dial you on. The gossip, peer_rpc and auth ports
+# must be reachable from the internet.
 listen = { gossip = "0.0.0.0:4001", peer_rpc = "0.0.0.0:4002", auth = "0.0.0.0:4003" }
-# NETWORK: the genesis seed peers (id + host:port), published at launch.
-peers = []
+
+# NETWORK: the published seed peers. `pubkey_hex` is MANDATORY on testnet and
+# mainnet — the node refuses to boot without it. Each key below is the
+# `pubkey` field of the matching validator in networks/testnet/genesis.json.
+#
+# Only three of the five genesis validators publish consensus ports. Validators
+# 1 and 2 do not, so they cannot be seeds.
+#
+# WARNING: all three seeds run on ONE machine. If that host is offline there is
+# no seed at all. Treat this as a single point of failure, not as three
+# independent peers.
+#
+# Verified reachable on 2026-08-21 by a protocol handshake against each port.
+peers = [
+  { id = 3, gossip = "222.167.34.66:4001", peer_rpc = "222.167.34.66:4002", auth = "222.167.34.66:4003", pubkey_hex = "03476bf897a74a4087cf63faf2a8947cc4079a3e9256ee50d9e46baeda143324ab" },
+  { id = 4, gossip = "222.167.34.66:4011", peer_rpc = "222.167.34.66:4012", auth = "222.167.34.66:4013", pubkey_hex = "029c00391e32a0ee6aee0a78367da85b2596719cee3a85ad047153fde55ce28718" },
+  { id = 5, gossip = "222.167.34.66:4021", peer_rpc = "222.167.34.66:4022", auth = "222.167.34.66:4023", pubkey_hex = "033f195adb23bb2ed72116b3d0990895165bba526ff634e948eb37f7c05686a4ae" },
+]
+# Template for one peer entry. Copy the shape, then set your own values:
+# { id = 9, gossip = "host:4001", peer_rpc = "host:4002", auth = "host:4003", pubkey_hex = "<66 hex chars>" },
 
 [consensus]
-target_block_interval_ms = 1000
-chain_id = 114514                        # NETWORK: must equal genesis.json chain_id (testnet 114514 / mainnet 8964)
-chain_start_ms = 1784073600000           # NETWORK: must equal genesis.json genesis_time_ms
+chain_id = 114514                        # NETWORK: must equal genesis.json chain_id
+chain_start_ms = 1785100500000           # NETWORK: must equal genesis.json genesis_time_ms
+
+# Target only. The observed rate is measured, not configured.
+target_block_interval_ms = 100
+
+# Floor in ms between consecutive proposals. Read only when
+# `responsive_propose` is true. Default 25.
+# min_block_interval_ms = 25
+
+# Propose on round-advance instead of on the tick. Scheduling only: it changes
+# WHEN a block is proposed, never WHAT is committed. Default false.
+responsive_propose = false
+
 startup_grace_secs = 15
+
 # Explicit genesis — the published chain-creation artifact for your network
-# (networks/<net>/genesis.json). The node binds its genesis block to this file's
-# genesis_hash and derives the epoch length + active-set cap from it. Copy the
-# network's genesis.json locally and point here.
+# (networks/<net>/genesis.json). The node binds its genesis block to this
+# file's hash, and reads the epoch length and the active-set cap from it. Copy
+# the network's genesis.json locally and point here.
 genesis_file = "/etc/mtf/genesis.json"   # EDIT: local path to the network's genesis.json
-# NETWORK: the genesis validator set — must AGREE with genesis.json (cross-checked
-# at boot, fail-closed). id + stake + pubkey_hex are taken from genesis.json.
+
+# NETWORK: the genesis validator set. It must AGREE with genesis.json, which the
+# node cross-checks at boot and fails closed. Take id, stake and pubkey_hex from
+# genesis.json. `pubkey_hex` is MANDATORY here too on testnet and mainnet.
 validators = [
-  # { id = 1, stake = 100, pubkey_hex = "<33-byte hex from genesis.json>" },
+  { id = 1, stake = 18200000, pubkey_hex = "0398af87ecf69c9252e071d3993dd20dcb38f969f1541e5a1e15ab4779e140823c" },
+  { id = 2, stake = 13100000, pubkey_hex = "02d3edde0f22bdedafdfc020a42a204142a7efdd88faa55c07e04419e4188631f3" },
+  { id = 3, stake = 10600000, pubkey_hex = "03476bf897a74a4087cf63faf2a8947cc4079a3e9256ee50d9e46baeda143324ab" },
+  { id = 4, stake = 20400000, pubkey_hex = "029c00391e32a0ee6aee0a78367da85b2596719cee3a85ad047153fde55ce28718" },
+  { id = 5, stake = 25300000, pubkey_hex = "033f195adb23bb2ed72116b3d0990895165bba526ff634e948eb37f7c05686a4ae" },
 ]
 
 [observability]
+# All three addresses below are listen addresses for YOUR node. They are not
+# project-hosted endpoints. Choose ports that suit your host.
 api_listen = "0.0.0.0:8080"              # REST + WebSocket
 metrics_listen = "127.0.0.1:9100"
-evm_rpc_listen = "0.0.0.0:8545"          # Ethereum JSON-RPC edge
+# EVM JSON-RPC. It starts ONLY when api_listen is also set, because it reuses
+# the same read handle. With api_listen unset the node logs a warning and skips
+# the EVM RPC.
+evm_rpc_listen = "0.0.0.0:8545"
 
 [persistence]
 enabled = true
 
-# Advanced, optional subsystems (off-chain price feed, multi-chain bridge
-# operation) are configured separately per the operator handbook and are omitted
-# from this minimal template.
+# Bridge cosigner config. It applies ONLY to validators that operate the custody
+# bridge. Leave the whole section out otherwise.
+#
+# `chain` accepts "base" or "arbitrum". No other value parses.
+# `rpc_urls` is an ordered FAILOVER list. The deposit watcher moves to the next
+# endpoint when one is down. `rpc_url` stays supported and comes first.
+#
+# WARNING: the old `[bridge_chain.bootstrap]` sub-table was DELETED. The config
+# parser does not reject unknown fields, so an old block still parses and is
+# then silently discarded. Delete it yourself.
+#
+# [[bridge_chain]]
+# chain = "base"
+# enabled = true
+# rpc_url = "https://mainnet.base.org"
+# rpc_urls = ["https://base.llamarpc.com"]

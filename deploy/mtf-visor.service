@@ -1,12 +1,21 @@
 # systemd unit for mtf-visor. Install to /etc/systemd/system/mtf-visor.service,
 # then: systemctl daemon-reload && systemctl enable --now mtf-visor
 #
-# The outer supervisor here is systemd; the visor supervises the node. The visor
-# exits 78 to signal an INTENTIONAL halt (e.g. an upgrade it cannot safely
-# complete) — RestartPreventExitStatus stops systemd from papering over that.
+# The outer supervisor here is systemd; the visor supervises the node.
+#
+# Two different exit codes, on two different processes. The node exits 77 at a
+# freeze height. The visor sees that, swaps the binary and restarts the node —
+# systemd never sees a 77. Only when the visor cannot complete the swap safely
+# does the visor itself stop, and it exits 78. So: the node exits 77; the visor
+# reports 78 to systemd.
+#
+# The node also exits 80 to ask for a certified bootstrap. The visor restarts it
+# after a backoff, and the node then adopts a certified state bundle. systemd
+# never sees an 80 either. Never add 80 to RestartPreventExitStatus — that would
+# block the node's own recovery path.
 
 [Unit]
-Description=mtf-visor — MetaFlux node supervisor + auto-updater
+Description=MetaFlux visor — node supervisor + auto-updater
 After=network-online.target
 Wants=network-online.target
 
@@ -15,7 +24,8 @@ Type=simple
 ExecStart=/usr/local/bin/mtf-visor run --config /etc/mtf/visor.toml
 Restart=on-failure
 RestartSec=5
-# 78 = intentional halt; it needs an operator, not an auto-restart loop.
+# 78 = the visor's intentional halt; it needs an operator, not a restart loop.
+# 78 is the ONLY code that may be restart-prevented here.
 RestartPreventExitStatus=78
 # SIGTERM, then a grace window, then SIGKILL — long enough for the visor to drain
 # the node cleanly. Keep this above the visor's shutdown_grace_secs.
