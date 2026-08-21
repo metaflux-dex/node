@@ -170,6 +170,84 @@ Choose ports that suit your host.
 the same read handle, so with `api_listen` unset the node logs a warning and
 skips `evm_rpc_listen`.
 
+## What the node serves
+
+Set `[observability] api_listen` and the node serves its own API. Everything
+below comes from the node's committed state, so it answers from your own machine
+with no dependency on anyone else's endpoint.
+
+**`POST /info` — 74 request types.** Markets and metadata, per-account state,
+open orders, fills, funding, ledger history, staking, vaults, governance,
+bridge state, and the order book. One shape throughout:
+
+```sh
+curl -s http://127.0.0.1:8080/info \
+  -H 'content-type: application/json' \
+  -d '{"type":"markets"}'
+```
+
+Every response is `{"type": …, "data": …}`. Numbers that carry precision are
+strings, so no client loses a digit to a float.
+
+**`GET /ws` — 22 subscription channels.** Market data: `l2_book`, `bbo`,
+`trades`, `candles`, `all_mids`, `active_asset_ctx`, `markets`. Per-account,
+each requiring a `user` address: `fills`, `order_updates`, `user_events`,
+`notifications`, `ledger_updates`, `open_orders`, `user_fundings`,
+`account_state`, `web_data`, `active_asset_data`, `spot_margin_state`,
+`user_twap_slice_fills`, `user_twap_history`. Chain: `explorer_block`,
+`explorer_txs`.
+
+```json
+{"method":"subscribe","subscription":{"type":"trades","coin":"BTC"}}
+```
+
+The socket also carries a `post` lane, so one connection can both stream and
+make request/response calls:
+
+```json
+{"method":"post","id":1,"request":{"type":"info","payload":{"type":"markets"}}}
+```
+
+**EVM JSON-RPC.** Set `evm_rpc_listen` and the node serves standard Ethereum
+JSON-RPC. It needs `api_listen` set as well, because it reuses that read handle;
+with `api_listen` unset the node logs a warning and skips it.
+
+**Prometheus metrics** on `metrics_listen`. `mtf_committed_round` is the one to
+watch: sample it twice and see it climb.
+
+## Reading L1 data
+
+The node can write each block's activity to hourly-rotated NDJSON under its data
+directory. Every stream is off by default and none of them touch the app hash.
+
+| `[persistence]` key | Written to |
+|---|---|
+| `write_trades` | `node_trades/hourly/{date}/{hour}` |
+| `write_fills` | `node_fills/hourly/{date}/{hour}` |
+| `write_order_statuses` | `node_order_statuses/hourly/{date}/{hour}` |
+| `write_funding` | `node_funding/hourly/{date}/{hour}` |
+| `write_ledger` | `node_ledger/hourly/{date}/{hour}` |
+| `write_equity_snapshots` | `node_equity_snapshots/hourly/{date}/{hour}` |
+| `write_gov` | `node_gov/hourly/{date}/{hour}` |
+| `write_asset_ctxs` | `node_asset_ctxs/hourly/{date}/{hour}` |
+| `write_replica_cmds` | `replica_cmds/{date}/{hour}` |
+| `record_l2` | `l2_book_diffs.jsonl` |
+| `record_l4` | `l4_book_diffs.jsonl` |
+
+**Most of these are refused on a validator, and that refusal is deliberate.**
+They de-anonymise order flow — they name the addresses behind each fill — and
+they add write load to a machine whose job is consensus. Run them on a dedicated
+non-validating node. `allow_stream_on_validator` overrides the refusal if you
+accept both costs.
+
+Two are exempt because they carry only public data: `write_gov` (governance
+votes, already public) and `write_asset_ctxs` (mark, oracle, funding and open
+interest per market).
+
+`record_l4` is the one to be careful with. It records de-anonymised book diffs,
+which is every resting order with its owner. `record_l2` is the aggregated
+sibling: price levels only, no owner and no order id.
+
 ## Data and logs
 
 - **Visor home** (`/var/lib/mtf-visor`): staged binaries, the upgrade journal,

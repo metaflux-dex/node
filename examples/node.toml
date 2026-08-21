@@ -100,6 +100,34 @@ evm_rpc_listen = "0.0.0.0:8545"
 [persistence]
 enabled = true
 
+# Per-block NDJSON streams, hourly-rotated under <data_dir>. All OFF by default.
+# None of them touch the app hash, so turning one on cannot fork your node.
+#
+# Most are REFUSED on a validator. They name the addresses behind each fill, and
+# they add write load to a machine whose job is consensus. Run them on a
+# dedicated non-validating node. See README, "Reading L1 data".
+#
+# write_trades = true            # node_trades/hourly/{date}/{hour}
+# write_fills = true             # node_fills/... — de-anonymised
+# write_order_statuses = true    # node_order_statuses/...
+# write_funding = true           # node_funding/... — de-anonymised
+# write_ledger = true            # node_ledger/... — de-anonymised
+# write_equity_snapshots = true  # node_equity_snapshots/... — de-anonymised
+# write_replica_cmds = true      # replica_cmds/{date}/{hour} — the block archive
+#
+# These two carry only public data and are EXEMPT from the validator refusal:
+# write_gov = true               # node_gov/... — governance votes
+# write_asset_ctxs = true        # node_asset_ctxs/... — mark, oracle, funding, OI
+#
+# Book diff recorders. record_l4 writes every resting order WITH its owner;
+# record_l2 is the aggregated sibling — price levels only, no owner, no order id.
+# record_l2 = true               # l2_book_diffs.jsonl
+# record_l4 = true               # l4_book_diffs.jsonl
+#
+# Overrides the validator refusal above. Set it only if you accept both the
+# de-anonymisation and the write load on a consensus machine.
+# allow_stream_on_validator = true
+
 # Bridge cosigner config. It applies ONLY to validators that operate the custody
 # bridge. Leave the whole section out otherwise.
 #
