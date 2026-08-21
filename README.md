@@ -18,6 +18,74 @@ The visor is the only process you launch. It:
 - **swaps the binary in lockstep with the network** at a governance-set freeze
   height, so your node upgrades hands-free without forking.
 
+## What a node gives you
+
+A node is not a follower that needs a hosted API to be useful. Set
+`[observability] api_listen` and it answers every read below from its own
+committed state, and it accepts orders. No third-party endpoint is in the path.
+
+**`POST /exchange` — the write side.** Submit EIP-712 signed actions straight to
+your own node's mempool: orders, cancels, transfers, staking, governance votes.
+Your machine is the venue you trade against.
+
+**`POST /info` — 74 request types, from committed state.** Markets and metadata,
+the order book, per-account state, open orders, positions, balances, funding
+rates, fees, staking, vaults, governance, and bridge state.
+
+```sh
+curl -s http://127.0.0.1:8080/info \
+  -H 'content-type: application/json' -d '{"type":"markets"}'
+```
+
+Every response is `{"type": …, "data": …}`, and any number that carries precision
+is a string, so no client loses a digit to a float.
+
+**`GET /ws` — 22 channels, folded from the node's own blocks.** Market data:
+`l2_book`, `bbo`, `trades`, `candles`, `all_mids`, `active_asset_ctx`,
+`markets`. Per-account, each taking a `user` address: `fills`, `order_updates`,
+`user_events`, `notifications`, `ledger_updates`, `open_orders`,
+`user_fundings`, `account_state`, `web_data`, `active_asset_data`,
+`spot_margin_state`, `user_twap_slice_fills`, `user_twap_history`. Chain:
+`explorer_block`, `explorer_txs`.
+
+```json
+{"method":"subscribe","subscription":{"type":"trades","coin":"BTC"}}
+```
+
+Candles are built by the node itself, and they cost nothing until somebody wants
+them. A `(market, interval)` series with no live subscriber is never folded — an
+unwatched market costs one map lookup per block and builds no bar. A watched
+series keeps at most 1000 bars in a ring, and a series that goes cold is dropped.
+None of it touches the app hash, and a restart rebuilds the bars from replayed
+fills. The socket also carries a `post` lane, so one connection can stream
+and make request/response calls at the same time:
+
+```json
+{"method":"post","id":1,"request":{"type":"info","payload":{"type":"markets"}}}
+```
+
+**EVM JSON-RPC.** Set `evm_rpc_listen` and the node answers standard Ethereum
+JSON-RPC — `eth_call`, `eth_getLogs`, `eth_sendRawTransaction`,
+`eth_getTransactionReceipt`, `eth_subscribe` and the rest of the usual set — for
+the EVM that executes inside each consensus round. It needs `api_listen` set as
+well, because it reuses that read handle.
+
+**Prometheus metrics** on `metrics_listen`. `mtf_committed_round` is the one to
+watch: sample it twice and see it climb.
+
+### What a node does not have
+
+A node holds committed state and a bounded recent window, not an archive. Four
+account-history reads answer with an empty array rather than a wrong one:
+`user_funding`, `user_ledger_updates`, `user_twap_slice_fills` and
+`delegator_history`. Their events are streamed, not retained for REST.
+`historical_orders` returns executed fills only.
+
+Deep history, cross-account aggregation and leaderboards are not part of this
+repository. If you need them, either consume the streams under
+[Reading L1 data](#reading-l1-data) and build the index you want, or use the
+hosted API.
+
 ## Hardware
 
 | Role | vCPU | RAM | Disk |
@@ -169,51 +237,6 @@ Choose ports that suit your host.
 **The EVM JSON-RPC starts only when the REST API is also configured.** It reuses
 the same read handle, so with `api_listen` unset the node logs a warning and
 skips `evm_rpc_listen`.
-
-## What the node serves
-
-Set `[observability] api_listen` and the node serves its own API. Everything
-below comes from the node's committed state, so it answers from your own machine
-with no dependency on anyone else's endpoint.
-
-**`POST /info` — 74 request types.** Markets and metadata, per-account state,
-open orders, fills, funding, ledger history, staking, vaults, governance,
-bridge state, and the order book. One shape throughout:
-
-```sh
-curl -s http://127.0.0.1:8080/info \
-  -H 'content-type: application/json' \
-  -d '{"type":"markets"}'
-```
-
-Every response is `{"type": …, "data": …}`. Numbers that carry precision are
-strings, so no client loses a digit to a float.
-
-**`GET /ws` — 22 subscription channels.** Market data: `l2_book`, `bbo`,
-`trades`, `candles`, `all_mids`, `active_asset_ctx`, `markets`. Per-account,
-each requiring a `user` address: `fills`, `order_updates`, `user_events`,
-`notifications`, `ledger_updates`, `open_orders`, `user_fundings`,
-`account_state`, `web_data`, `active_asset_data`, `spot_margin_state`,
-`user_twap_slice_fills`, `user_twap_history`. Chain: `explorer_block`,
-`explorer_txs`.
-
-```json
-{"method":"subscribe","subscription":{"type":"trades","coin":"BTC"}}
-```
-
-The socket also carries a `post` lane, so one connection can both stream and
-make request/response calls:
-
-```json
-{"method":"post","id":1,"request":{"type":"info","payload":{"type":"markets"}}}
-```
-
-**EVM JSON-RPC.** Set `evm_rpc_listen` and the node serves standard Ethereum
-JSON-RPC. It needs `api_listen` set as well, because it reuses that read handle;
-with `api_listen` unset the node logs a warning and skips it.
-
-**Prometheus metrics** on `metrics_listen`. `mtf_committed_round` is the one to
-watch: sample it twice and see it climb.
 
 ## Reading L1 data
 
