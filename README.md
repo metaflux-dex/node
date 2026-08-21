@@ -18,38 +18,6 @@ The visor is the only process you launch. It:
 - **swaps the binary in lockstep with the network** at a governance-set freeze
   height, so your node upgrades hands-free without forking.
 
-## Names on disk
-
-This documentation says *node* and *visor*. The installed binaries are named
-`mtf-node` and `mtf-visor`, and the visor's home is `/var/lib/mtf-visor`.
-Commands in this repository use the on-disk names. Those names are load-bearing
-and will not change.
-
-## Read before you start
-
-- **This is a testnet, and its data can be reset.** The chain was re-genesised on
-  2026-07-26 with the same `chain_id` and a new genesis. That can happen again.
-  Do not treat testnet state as durable.
-- **Joining is not fully self-service.** Correct config is not enough. The
-  network operators must add your node to the running validators' configs before
-  it receives any blocks — a read-only observer included. See
-  [docs/JOINING.md](docs/JOINING.md).
-- **Validator registration is not live yet.** See
-  [docs/VALIDATOR.md](docs/VALIDATOR.md).
-
-## Trust model, in one paragraph
-
-The network runs two independent release-verification layers, and the visor
-checks both before it makes any binary runnable. Layer one is a threshold
-secp256k1 signature over the release manifest plus a blake3 content hash of the
-binary; the manifest also binds the `chain_id` and `genesis_hash`, and its
-sequence only ever advances, so a release cannot be rolled back under you. Layer
-two is a detached GPG signature checked against an offline root key that you
-fetch once and pin. The layer-one keys live in CI and the layer-two root lives
-offline, so taking CI is still not enough to make your node run a hostile binary.
-You verify the visor itself, once, with its published checksum. Full detail in
-[docs/VERIFYING.md](docs/VERIFYING.md).
-
 ## Hardware
 
 | Role | vCPU | RAM | Disk |
@@ -140,6 +108,31 @@ sudo cp examples/node.toml            /etc/mtf/node.toml
   `visor.toml`, `node.toml` and `genesis.json`, then
   `docker compose -f deploy/docker-compose.yml up -d`. The compose file mounts
   that directory; it does not carry its own copies.
+
+## Read before you start
+
+- **This is a testnet, and its data can be reset.** The chain was re-genesised on
+  2026-07-26 with the same `chain_id` and a new genesis. That can happen again.
+  Do not treat testnet state as durable.
+- **Joining is not fully self-service.** Correct config is not enough. The
+  network operators must add your node to the running validators' configs before
+  it receives any blocks — a read-only observer included. See
+  [docs/JOINING.md](docs/JOINING.md).
+- **Validator registration is not live yet.** See
+  [docs/VALIDATOR.md](docs/VALIDATOR.md).
+
+## Trust model, in one paragraph
+
+The network runs two independent release-verification layers, and the visor
+checks both before it makes any binary runnable. Layer one is a threshold
+secp256k1 signature over the release manifest plus a blake3 content hash of the
+binary; the manifest also binds the `chain_id` and `genesis_hash`, and its
+sequence only ever advances, so a release cannot be rolled back under you. Layer
+two is a detached GPG signature checked against an offline root key that you
+fetch once and pin. The layer-one keys live in CI and the layer-two root lives
+offline, so taking CI is still not enough to make your node run a hostile binary.
+You verify the visor itself, once, with its published checksum. Full detail in
+[docs/VERIFYING.md](docs/VERIFYING.md).
 
 ## How upgrades work
 

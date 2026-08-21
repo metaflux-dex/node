@@ -1,5 +1,4 @@
 # Node config template — the file the visor passes as `mtf-node --config`.
-# The binary this configures is named `mtf-node` on disk.
 #
 # Copy to /etc/mtf/node.toml and edit the `# EDIT` fields. Values marked
 # `# NETWORK` are fixed per network. All nodes on a network must share them

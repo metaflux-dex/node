@@ -12,14 +12,6 @@ The layers are independent on purpose. Layer 1 keys live in CI. The layer 2 root
 key lives offline. An attacker who takes CI still cannot produce a binary the
 visor will run.
 
-## Names on disk
-
-The manifest and the release URLs name the binary `mtf-node`. This
-documentation says *node*, but the artifact name is `mtf-node`, and the visor's
-home is `/var/lib/mtf-visor`. **These names are load-bearing and will not
-change.** The signed manifest contains the download URL, so the path cannot be
-redirected, and every deployed visor resolves the binary under its own home.
-
 ## Layer 1 — threshold signature and content hash
 
 For every update the visor:
