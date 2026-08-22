@@ -168,6 +168,34 @@ sudo cp examples/node.toml            /etc/mtf/node.toml
 # then edit the `# EDIT` fields in both configs
 ```
 
+### 3b. Check the seed list before you trust it
+
+`examples/node.toml` ships the seeds that were reachable on the day it was
+written. Seeds move. Ask a running node for the current roster rather than
+assuming the file is still right:
+
+```sh
+curl -s -X POST https://api.testnet.mtf.exchange/info \
+  -H 'Content-Type: application/json' \
+  -d '{"type":"gossip_root_ips"}'
+```
+
+Each row carries an `id` and the three consensus endpoints, in the same shape a
+`peers` entry takes, so a row is copied across as it stands:
+
+```json
+{ "data": { "peers": [
+  { "id": 3, "gossip": "host:4001", "peer_rpc": "host:4002", "auth": "host:4003" }
+] } }
+```
+
+Take each `pubkey_hex` from `networks/testnet/genesis.json`, keyed by the same
+`id`. The roster does not repeat it, so the two can never disagree.
+
+**An empty list is an answer, not a failure.** It says the deployment advertises
+no public addresses — there is no fallback to the addresses its nodes dial each
+other on, which you could not reach anyway. Ask the operator for addresses.
+
 ### 4. Run
 
 - **systemd:** install [`deploy/mtf-visor.service`](deploy/mtf-visor.service),
