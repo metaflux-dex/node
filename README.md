@@ -40,25 +40,28 @@ curl -s http://127.0.0.1:8080/info \
 Every response is `{"type": …, "data": …}`, and any number that carries precision
 is a string, so no client loses a digit to a float.
 
-**`GET /ws` — 22 channels, folded from the node's own blocks.** Market data:
-`l2_book`, `bbo`, `trades`, `candles`, `all_mids`, `active_asset_ctx`,
-`markets`. Per-account, each taking a `user` address: `fills`, `order_updates`,
+**`GET /ws` — folded from the node's own blocks.** Market data:
+`l2_book`, `bbo`, `trades`, `all_mids`, `active_asset_ctx`, `markets`.
+Per-account, each taking a `user` address: `fills`, `order_updates`,
 `user_events`, `notifications`, `ledger_updates`, `open_orders`,
 `user_fundings`, `account_state`, `web_data`, `active_asset_data`,
-`spot_margin_state`, `user_twap_slice_fills`, `user_twap_history`. Chain:
-`explorer_block`, `explorer_txs`.
+`spot_margin_state`, `user_twap_slice_fills`, `user_twap_history`.
+
+There is no `candles` channel. A node does not aggregate OHLCV — a subscribe is
+refused as an unknown channel. Bars are built by the serving layer from the
+`trades` stream.
+
+The socket also carries two explorer tapes. They are not listed above because
+they duplicate what an archive already serves, and they are a candidate for
+removal on the same reasoning that removed candles: a consensus node should emit
+its blocks, not maintain a viewer's feed.
 
 ```json
 {"method":"subscribe","subscription":{"type":"trades","coin":"BTC"}}
 ```
 
-Candles are built by the node itself, and they cost nothing until somebody wants
-them. A `(market, interval)` series with no live subscriber is never folded — an
-unwatched market costs one map lookup per block and builds no bar. A watched
-series keeps at most 1000 bars in a ring, and a series that goes cold is dropped.
-None of it touches the app hash, and a restart rebuilds the bars from replayed
-fills. The socket also carries a `post` lane, so one connection can stream
-and make request/response calls at the same time:
+The socket also carries a `post` lane, so one connection can stream and make
+request/response calls at the same time:
 
 ```json
 {"method":"post","id":1,"request":{"type":"info","payload":{"type":"markets"}}}
