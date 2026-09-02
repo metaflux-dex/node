@@ -7,8 +7,8 @@
 chain = "testnet"
 # Pinned chain identity — the published genesis hash (networks/testnet/genesis.hash).
 # The visor halts a node whose reported genesis_hash differs (booted on the wrong
-# chain). Verify with: mtf-node genesis-hash --genesis networks/testnet/genesis.json
-genesis_hash = "db1237bb365202c4b34bc60bff7511e605ef0f25fff149f5ceb84cc439f57314"
+# chain). The chain was created again on 2026-09-01. This value is the new chain.
+genesis_hash = "8f6fce34e462c5532f41280d3b262fe76013ce1a1d92dd2470b55bb28ec2102f"
 
 [node]
 config = "/etc/mtf/node.toml"   # EDIT: your node config (see examples/node.toml)
@@ -39,13 +39,18 @@ passthrough = true
 [update]
 manifest_url = "https://binaries.mtf.exchange/testnet/node/manifest.json"
 # Testnet release-signing public key (secp256k1). Layer 1 of two.
-release_pubkeys = ["0378fb0791fa8e8634601fb6a2969dcb0c251624acc09304c8f56b18eef64456a2"]
+release_pubkeys = ["03e379c8f5505e7627f0232fa06a72bc47560def9e85ef5cda3a64696306e43b34"]
 release_threshold = 1
 # Layer 2: the offline GPG root key. The visor imports this file into an isolated
 # keyring, then checks each staged binary's detached .asc signature against it.
 # The visor REFUSES to start an [update] section without this field, on every
-# network. Fetch the file first — see docs/VERIFYING.md.
-# Fingerprint: 5AF6597573B2E475B0C646BAD8E6D0B3D187F583
+# network.
+#
+# Fetch this key from a RELEASE directory, NOT from the unversioned path: that
+# one still serves the previous chain's root, which verifies no release of this
+# chain and whose own fingerprint check passes. The fingerprint that identifies
+# the correct key is 04781F5109BA16B3CCB43D1E66E38A32E5A25D73.
+# See docs/VERIFYING.md.
 release_gpg_pubkey = "/etc/mtf/pub_key.asc"
 poll_secs = 30
 request_timeout_secs = 30

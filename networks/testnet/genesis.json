@@ -1,40 +1,15 @@
 {
   "schema_version": 1,
   "chain_id": 114514,
-  "genesis_time_ms": 1785100500000,
+  "genesis_time_ms": 1788275280000,
   "epoch": 0,
   "epoch_rounds": 100000,
   "genesis_max_active": 100,
   "validators": [
-    {
-      "index": 1,
-      "address": "0xc2b8459589aba200f90215cd451a1d02365c7319",
-      "pubkey": "0398af87ecf69c9252e071d3993dd20dcb38f969f1541e5a1e15ab4779e140823c",
-      "stake": 18200000
-    },
-    {
-      "index": 2,
-      "address": "0x3afa1ad1fd8695f8d448c2a77e1e3123bc43a429",
-      "pubkey": "02d3edde0f22bdedafdfc020a42a204142a7efdd88faa55c07e04419e4188631f3",
-      "stake": 13100000
-    },
-    {
-      "index": 3,
-      "address": "0x076e39f8efb468222214b9f2965fa640d79c6d87",
-      "pubkey": "03476bf897a74a4087cf63faf2a8947cc4079a3e9256ee50d9e46baeda143324ab",
-      "stake": 10600000
-    },
-    {
-      "index": 4,
-      "address": "0xb87089523daa73e77d2575687504cb28e9620837",
-      "pubkey": "029c00391e32a0ee6aee0a78367da85b2596719cee3a85ad047153fde55ce28718",
-      "stake": 20400000
-    },
-    {
-      "index": 5,
-      "address": "0x3158e02d81ccceba0ce4698b62ef2c697f8a7f39",
-      "pubkey": "033f195adb23bb2ed72116b3d0990895165bba526ff634e948eb37f7c05686a4ae",
-      "stake": 25300000
-    }
+    { "index": 1, "address": "0xc2b8459589aba200f90215cd451a1d02365c7319", "pubkey": "0398af87ecf69c9252e071d3993dd20dcb38f969f1541e5a1e15ab4779e140823c", "stake": 100 },
+    { "index": 2, "address": "0x3afa1ad1fd8695f8d448c2a77e1e3123bc43a429", "pubkey": "02d3edde0f22bdedafdfc020a42a204142a7efdd88faa55c07e04419e4188631f3", "stake": 100 },
+    { "index": 3, "address": "0x076e39f8efb468222214b9f2965fa640d79c6d87", "pubkey": "03476bf897a74a4087cf63faf2a8947cc4079a3e9256ee50d9e46baeda143324ab", "stake": 100 },
+    { "index": 4, "address": "0xb87089523daa73e77d2575687504cb28e9620837", "pubkey": "029c00391e32a0ee6aee0a78367da85b2596719cee3a85ad047153fde55ce28718", "stake": 100 },
+    { "index": 5, "address": "0x3158e02d81ccceba0ce4698b62ef2c697f8a7f39", "pubkey": "033f195adb23bb2ed72116b3d0990895165bba526ff634e948eb37f7c05686a4ae", "stake": 100 }
   ]
 }

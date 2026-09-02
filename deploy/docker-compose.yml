@@ -22,6 +22,10 @@ services:
       args:
         ARCH: x86_64-unknown-linux-musl
         VISOR_VERSION: latest
+        # The key is served per RELEASE. The Dockerfile default pins one
+        # version; override here when that version moves. Never point it at the
+        # unversioned path — that serves a different chain's root.
+        # RELEASE_GPG_KEY_URL: https://binaries.mtf.exchange/testnet/node/<version>/pub_key.asc
     restart: on-failure
     stop_grace_period: 45s
     ports:

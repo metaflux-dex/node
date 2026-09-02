@@ -34,28 +34,24 @@ data_dir = "/var/lib/mtf-node"           # WAL + snapshots; back this up
 listen = { gossip = "0.0.0.0:4001", peer_rpc = "0.0.0.0:4002", auth = "0.0.0.0:4003" }
 
 # NETWORK: the published seed peers. `pubkey_hex` is MANDATORY on testnet and
-# mainnet — the node refuses to boot without it. Each key below is the
-# `pubkey` field of the matching validator in networks/testnet/genesis.json.
+# mainnet — the node refuses to boot without it. The key below is the `pubkey`
+# field of the matching validator in the network's genesis.json.
 #
-# Only three of the five genesis validators publish consensus ports. Validators
-# 1 and 2 do not, so they cannot be seeds.
+# The network advertises ONE seed. Read the current seed list yourself before you
+# trust this file. See the README, "Check the seed list before you trust it".
+# The row below is what the network advertised on 2026-09-02.
 #
-# WARNING: all three seeds run on ONE machine. If that host is offline there is
-# no seed at all. Treat this as a single point of failure, not as three
-# independent peers.
-#
-# Verified reachable on 2026-08-21 by a protocol handshake against each port.
+# WARNING: one seed is one machine. If that host is offline there is no seed at
+# all. Treat this as a single point of failure.
 peers = [
-  { id = 3, gossip = "222.167.34.66:4001", peer_rpc = "222.167.34.66:4002", auth = "222.167.34.66:4003", pubkey_hex = "03476bf897a74a4087cf63faf2a8947cc4079a3e9256ee50d9e46baeda143324ab" },
-  { id = 4, gossip = "222.167.34.66:4011", peer_rpc = "222.167.34.66:4012", auth = "222.167.34.66:4013", pubkey_hex = "029c00391e32a0ee6aee0a78367da85b2596719cee3a85ad047153fde55ce28718" },
-  { id = 5, gossip = "222.167.34.66:4021", peer_rpc = "222.167.34.66:4022", auth = "222.167.34.66:4023", pubkey_hex = "033f195adb23bb2ed72116b3d0990895165bba526ff634e948eb37f7c05686a4ae" },
+  { id = 1, gossip = "162.251.162.185:4001", peer_rpc = "162.251.162.185:4002", auth = "162.251.162.185:4003", pubkey_hex = "0398af87ecf69c9252e071d3993dd20dcb38f969f1541e5a1e15ab4779e140823c" },
 ]
 # Template for one peer entry. Copy the shape, then set your own values:
 # { id = 9, gossip = "host:4001", peer_rpc = "host:4002", auth = "host:4003", pubkey_hex = "<66 hex chars>" },
 
 [consensus]
 chain_id = 114514                        # NETWORK: must equal genesis.json chain_id
-chain_start_ms = 1785100500000           # NETWORK: must equal genesis.json genesis_time_ms
+chain_start_ms = 1788275280000           # NETWORK: must equal genesis.json genesis_time_ms
 
 # Target only. The observed rate is measured, not configured.
 target_block_interval_ms = 100
@@ -79,12 +75,15 @@ genesis_file = "/etc/mtf/genesis.json"   # EDIT: local path to the network's gen
 # NETWORK: the genesis validator set. It must AGREE with genesis.json, which the
 # node cross-checks at boot and fails closed. Take id, stake and pubkey_hex from
 # genesis.json. `pubkey_hex` is MANDATORY here too on testnet and mainnet.
+#
+# `stake` here is the GENESIS stake, which is not the live stake. Delegation
+# moves the live figure and this file must still match genesis.json.
 validators = [
-  { id = 1, stake = 18200000, pubkey_hex = "0398af87ecf69c9252e071d3993dd20dcb38f969f1541e5a1e15ab4779e140823c" },
-  { id = 2, stake = 13100000, pubkey_hex = "02d3edde0f22bdedafdfc020a42a204142a7efdd88faa55c07e04419e4188631f3" },
-  { id = 3, stake = 10600000, pubkey_hex = "03476bf897a74a4087cf63faf2a8947cc4079a3e9256ee50d9e46baeda143324ab" },
-  { id = 4, stake = 20400000, pubkey_hex = "029c00391e32a0ee6aee0a78367da85b2596719cee3a85ad047153fde55ce28718" },
-  { id = 5, stake = 25300000, pubkey_hex = "033f195adb23bb2ed72116b3d0990895165bba526ff634e948eb37f7c05686a4ae" },
+  { id = 1, stake = 100, pubkey_hex = "0398af87ecf69c9252e071d3993dd20dcb38f969f1541e5a1e15ab4779e140823c" },
+  { id = 2, stake = 100, pubkey_hex = "02d3edde0f22bdedafdfc020a42a204142a7efdd88faa55c07e04419e4188631f3" },
+  { id = 3, stake = 100, pubkey_hex = "03476bf897a74a4087cf63faf2a8947cc4079a3e9256ee50d9e46baeda143324ab" },
+  { id = 4, stake = 100, pubkey_hex = "029c00391e32a0ee6aee0a78367da85b2596719cee3a85ad047153fde55ce28718" },
+  { id = 5, stake = 100, pubkey_hex = "033f195adb23bb2ed72116b3d0990895165bba526ff634e948eb37f7c05686a4ae" },
 ]
 
 [observability]
