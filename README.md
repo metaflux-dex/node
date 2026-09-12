@@ -74,8 +74,16 @@ JSON-RPC — `eth_call`, `eth_getLogs`, `eth_sendRawTransaction`,
 the EVM that executes inside each consensus round. It needs `api_listen` set as
 well, because it reuses that read handle.
 
-**Prometheus metrics** on `metrics_listen`. `mtf_committed_round` is the one to
+**Prometheus metrics** on `metrics_listen`. `committed_round` is the one to
 watch: sample it twice and see it climb.
+
+```sh
+curl -s http://127.0.0.1:9100/metrics | grep -E '^(mtf_)?committed_round\{'
+```
+
+A node older than the next release names the same gauge `mtf_committed_round`.
+The pattern above matches the suffix, so it reads both. Match the full name and
+an older node answers with nothing, which looks like a stopped chain.
 
 ### What a node does not have
 

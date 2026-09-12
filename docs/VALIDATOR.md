@@ -94,9 +94,18 @@ curl -s -X POST http://127.0.0.1:8080/info \
 ```
 
 **This is a read on YOUR node's own API.** The hosted API does not serve
-`block_info`; it answers `UNKNOWN_TYPE`. The node's Prometheus counter
-`mtf_committed_round` is a second way to sample the round, if you already scrape
-it. Use one method for both samples, never one of each.
+`block_info`; it answers `UNKNOWN_TYPE`. The node's Prometheus gauge
+`committed_round` is a second way to sample the round, if you already scrape it:
+
+```sh
+curl -s http://127.0.0.1:9100/metrics | grep -E '^(mtf_)?committed_round\{'
+```
+
+A node older than the next release names the same gauge `mtf_committed_round`.
+The pattern above matches the suffix, so it reads both. Match the full name and
+an older node answers with nothing, which looks like a stopped chain.
+
+Use one method for both samples, never one of each.
 
 Read the `round` field. Wait a known number of seconds. Read it again.
 
